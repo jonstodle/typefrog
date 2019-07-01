@@ -20,6 +20,7 @@ impl Rust {
         match t.kind {
             TypeKind::Object => Rust::generate_object(t),
             TypeKind::Interface => Rust::generate_interface(t),
+            TypeKind::Enum => Rust::generate_enum(t),
             _ => vec![],
         }
     }
@@ -50,6 +51,21 @@ impl Rust {
                     TypeSection::Line(format!(
                         "{0}({0}),",
                     t.name.as_ref().unwrap()))
+                }).collect()),
+            TypeSection::Line("}".into())
+        ]
+    }
+
+    fn generate_enum(t: &Type) -> Vec<TypeSection> {
+        assert_eq!(t.kind, TypeKind::Enum);
+
+        vec![
+            TypeSection::Line(format!("pub enum {} {{", t.name.as_ref().unwrap())),
+            TypeSection::Indent(t.enum_values.as_ref().unwrap().iter()
+                .map(|ev| {
+                    TypeSection::Line(format!(
+                        "{0},",
+                        &ev.name))
                 }).collect()),
             TypeSection::Line("}".into())
         ]
