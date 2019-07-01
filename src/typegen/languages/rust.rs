@@ -19,7 +19,7 @@ impl Rust {
     fn parse_type(t: &Type) -> Vec<TypeSection> {
         match t.kind {
             TypeKind::Object => Rust::generate_object(t),
-//            TypeKind::Interface => Rust::generate_interface(t),
+            TypeKind::Interface => Rust::generate_interface(t),
             _ => vec![],
         }
     }
@@ -40,13 +40,20 @@ impl Rust {
         ]
     }
 
-    //    fn generate_interface(t: &Type) -> Vec<TypeSection> {
-//        assert_eq!(t.kind, TypeKind::Interface);
-//
-//        vec![
-//            TypeSection::Line(format!("pub trait {} {{", t.))
-//        ]
-//    }
+    fn generate_interface(t: &Type) -> Vec<TypeSection> {
+        assert_eq!(t.kind, TypeKind::Interface);
+
+        vec![
+            TypeSection::Line(format!("pub enum {} {{", t.name.as_ref().unwrap())),
+            TypeSection::Indent(t.possible_types.as_ref().unwrap().iter()
+                .map(|t| {
+                    TypeSection::Line(format!(
+                        "{0}({0}),",
+                    t.name.as_ref().unwrap()))
+                }).collect()),
+            TypeSection::Line("}".into())
+        ]
+    }
 
     fn get_type_name(t: &Type) -> String {
         match t.kind {
