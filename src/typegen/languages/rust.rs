@@ -105,7 +105,10 @@ impl Rust {
                 let name = if let Some(ref n) = t.name {
                     let n = &n[..];
                     match n {
+                        "Int" => String::from("isize"),
+                        "Float" => String::from("f64"),
                         "Boolean" => String::from("bool"),
+                        "ID" => String::from("String"),
                         _ => String::from(n),
                     }
                 } else {
