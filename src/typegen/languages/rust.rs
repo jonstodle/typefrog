@@ -24,7 +24,8 @@ impl Rust {
             TypeKind::Scalar => Rust::generate_scalar(t),
             TypeKind::InputObject => Rust::generate_input_object(t),
             TypeKind::NonNull => Rust::parse_type(&t.of_type.as_ref().as_ref().unwrap()),
-            _ => vec![],
+            TypeKind::List => Rust::parse_type(&t.of_type.as_ref().as_ref().unwrap()),
+            TypeKind::Union => Rust::generate_enum(t),
         }
     }
 
