@@ -22,6 +22,7 @@ impl Rust {
             TypeKind::Interface => Rust::generate_interface(t),
             TypeKind::Enum => Rust::generate_enum(t),
             TypeKind::Scalar => Rust::generate_scalar(t),
+            TypeKind::InputObject => Rust::generate_input_object(t),
             _ => vec![],
         }
     }
@@ -82,6 +83,32 @@ impl Rust {
                     TypeSection::Line(format!("pub struct {}(String);", t.name.as_ref().unwrap())),
                 ]
             }
+        }
+    }
+
+    fn generate_input_object(t: &Type) -> Vec<TypeSection> {
+        assert_eq!(t.kind, TypeKind::InputObject);
+
+        vec![
+            TypeSection::Line(format!("pub struct {} {{", t.name.as_ref().unwrap())),
+            TypeSection::Indent(t.input_fields.as_ref().unwrap().iter()
+                .map(|field| {
+                    TypeSection::Line(format!(
+                        "pub {}: {},",
+                        Rust::localize_name(&field.name),
+                        Rust::get_type_name_without_option(&field.schema_type)))
+                }).collect()),
+            TypeSection::Line("}".into()),
+        ]
+    }
+
+    fn get_type_name_without_option(t: &Type) -> String {
+        let name = Rust::get_type_name(t);
+
+        if t.kind.eq(&TypeKind::NonNull) && name.starts_with("Option<") {
+            String::from(&name[7..(name.len() - 1)])
+        } else {
+            name
         }
     }
 
