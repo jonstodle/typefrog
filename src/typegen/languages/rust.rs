@@ -21,6 +21,7 @@ impl Rust {
             TypeKind::Object => Rust::generate_object(t),
             TypeKind::Interface => Rust::generate_interface(t),
             TypeKind::Enum => Rust::generate_enum(t),
+            TypeKind::Scalar => Rust::generate_scalar(t),
             _ => vec![],
         }
     }
@@ -69,6 +70,19 @@ impl Rust {
                 }).collect()),
             TypeSection::Line("}".into())
         ]
+    }
+
+    fn generate_scalar(t: &Type) -> Vec<TypeSection> {
+        assert_eq!(t.kind, TypeKind::Scalar);
+
+        match &t.name.as_ref().unwrap()[..] {
+            "Int" | "Float" | "String" | "Boolean" | "ID" => vec![],
+            _ => {
+                vec![
+                    TypeSection::Line(format!("pub struct {}(String);", t.name.as_ref().unwrap())),
+                ]
+            }
+        }
     }
 
     fn get_type_name(t: &Type) -> String {
