@@ -8,7 +8,9 @@ impl Rust {
         let output = types.iter()
             .flat_map(|t| {
                 let mut sections = Rust::parse_type(t);
-                sections.extend(vec![TypeSection::Line(String::from(""))]);
+                if sections.len() > 0 {
+                    sections.extend(vec![TypeSection::Line(String::from(""))]);
+                }
                 sections
             })
             .collect();
