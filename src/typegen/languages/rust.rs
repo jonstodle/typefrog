@@ -73,15 +73,20 @@ impl Rust {
 
     fn get_type_name(t: &Type) -> String {
         match t.kind {
-            TypeKind::List => format!("Vec<{}>", Rust::get_type_name(&t.of_type.as_ref().as_ref().unwrap())),
-            TypeKind::NonNull => {
-                let name = Rust::get_type_name(&t.of_type.as_ref().as_ref().unwrap());
-                if name.starts_with("Optional<") {
-                    String::from(&name[7..(name.len() - 1)])
-                } else {
-                    name
+            TypeKind::List => {
+                let mut name = format!("Option<Vec<{}>>", Rust::get_type_name(&t.of_type.as_ref().as_ref().unwrap()));
+
+                if t.of_type.as_ref().as_ref().unwrap().kind.eq(&TypeKind::NonNull) &&
+                    name.starts_with("Option<Vec<Option<") {
+                    name.replace_range(11..18, "");
+                    name.remove(name.len() - 1);
                 }
-            }
+
+                name
+            },
+            TypeKind::NonNull => {
+               Rust::get_type_name(&t.of_type.as_ref().as_ref().unwrap())
+            },
             _ => {
                 let name = if let Some(ref n) = t.name {
                     let n = &n[..];
