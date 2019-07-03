@@ -37,11 +37,19 @@ impl Rust {
         vec![
             TypeSection::Line(format!("pub struct {} {{", t.name.as_ref().unwrap())),
             TypeSection::Indent(t.fields.as_ref().unwrap().iter()
-                .map(|field| {
-                    TypeSection::Line(format!(
-                        "pub {}: {},",
-                        Rust::localize_name(field.name.as_ref().unwrap()),
-                        Rust::get_type_name(&field.schema_type)))
+                .flat_map(|field| {
+                    let name = field.name.as_ref().unwrap();
+                    vec![
+                        TypeSection::Line(format!(
+                            r#"#[serde(rename = "{}")"#,
+                            name
+                        )),
+                        TypeSection::Line(format!(
+                            "pub {}: {},",
+                            Rust::localize_name(name),
+                            Rust::get_type_name(&field.schema_type)
+                        ))
+                    ]
                 }).collect()),
             TypeSection::Line("}".into()),
         ]
