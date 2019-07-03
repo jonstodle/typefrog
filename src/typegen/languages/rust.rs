@@ -1,6 +1,14 @@
 use crate::typegen::schema_types::{Type, TypeKind};
 use crate::typegen::languages::TypeSection;
 
+const RESERVED_WORDS: &'static [&'static str] = &[
+    "as", "break", "const", "continue", "crate", "else", "enum", "extern", "FALSE", "fn", "for",
+    "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return",
+    "self", "static", "struct", "super", "trait", "TRUE", "type", "unsafe", "use", "where", "while",
+    "dyn", "abstract", "become", "box", "do", "final", "macro", "override", "priv", "typeof",
+    "unsized", "virtual", "yield", "async", "await", "try", "union", "'static",
+];
+
 pub struct Rust;
 
 impl Rust {
@@ -47,7 +55,7 @@ impl Rust {
                     let name = field.name.as_ref().unwrap();
                     vec![
                         TypeSection::Line(format!(
-                            r#"#[serde(rename = "{}")"#,
+                            r#"#[serde(rename = "{}")]"#,
                             name
                         )),
                         TypeSection::Line(format!(
@@ -71,7 +79,7 @@ impl Rust {
                 .map(|t| {
                     TypeSection::Line(format!(
                         "{0}({0}),",
-                    t.name.as_ref().unwrap()))
+                        t.name.as_ref().unwrap()))
                 }).collect()),
             TypeSection::Line("}".into())
         ]
@@ -114,11 +122,19 @@ impl Rust {
             TypeSection::Line(String::from("#[derive(Serialize, Deserialize)]")),
             TypeSection::Line(format!("pub struct {} {{", t.name.as_ref().unwrap())),
             TypeSection::Indent(t.input_fields.as_ref().unwrap().iter()
-                .map(|field| {
-                    TypeSection::Line(format!(
-                        "pub {}: {},",
-                        Rust::localize_name(&field.name),
-                        Rust::get_type_name_without_option(&field.schema_type)))
+                .flat_map(|field| {
+                    let name = &field.name;
+
+                    vec![
+                        TypeSection::Line(format!(
+                            r#"#[serde(rename = "{}")]"#,
+                            name
+                        )),
+                        TypeSection::Line(format!(
+                            "pub {}: {},",
+                            Rust::localize_name(name),
+                            Rust::get_type_name_without_option(&field.schema_type))),
+                    ]
                 }).collect()),
             TypeSection::Line("}".into()),
         ]
@@ -146,10 +162,10 @@ impl Rust {
                 }
 
                 name
-            },
+            }
             TypeKind::NonNull => {
-               Rust::get_type_name(&t.of_type.as_ref().as_ref().unwrap())
-            },
+                Rust::get_type_name(&t.of_type.as_ref().as_ref().unwrap())
+            }
             _ => {
                 let name = if let Some(ref n) = t.name {
                     let n = &n[..];
@@ -169,7 +185,7 @@ impl Rust {
     }
 
     fn localize_name(name: &str) -> String {
-        name.char_indices()
+        let mut name: String = name.char_indices()
             .flat_map(|(idx, c)|
                 if c.is_uppercase() {
                     let mut v = vec![];
@@ -181,7 +197,14 @@ impl Rust {
                 } else {
                     vec![c]
                 })
-            .collect::<String>()
+            .collect();
+
+        if RESERVED_WORDS.contains(&name.as_str()) {
+            name.insert(0, 'r');
+            name.insert(1, '#');
+        }
+
+        name
     }
 }
 
