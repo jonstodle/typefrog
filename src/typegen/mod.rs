@@ -38,7 +38,7 @@ mod tests {
 
         let types = generate_types(&input).unwrap();
 
-        let _ = File::create("/Users/jon/Downloads/gqltest/papi.rs").unwrap()
+        let _ = File::create("/Users/jon/Dev/typefrog/src/papi.rs").unwrap()
             .write_all(types.as_ref());
     }
 }
