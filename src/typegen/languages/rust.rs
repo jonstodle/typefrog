@@ -5,15 +5,20 @@ pub struct Rust;
 
 impl Rust {
     pub fn generate_types(types: &Vec<Type>) -> String {
-        let output = types.iter()
+        let mut output = vec![
+            TypeSection::Line(String::from("use serde;")),
+            TypeSection::Line(String::from("use serde_json::{Serialize, Deserialize};")),
+            TypeSection::Line(String::from("")),
+        ];
+
+        output.extend(types.iter()
             .flat_map(|t| {
                 let mut sections = Rust::parse_type(t);
                 if sections.len() > 0 {
                     sections.extend(vec![TypeSection::Line(String::from(""))]);
                 }
                 sections
-            })
-            .collect();
+            }));
 
         super::print(output, 4, 0)
     }
@@ -35,6 +40,7 @@ impl Rust {
         assert_eq!(t.kind, TypeKind::Object);
 
         vec![
+            TypeSection::Line(String::from("#[derive(Serialize, Deserialize)]")),
             TypeSection::Line(format!("pub struct {} {{", t.name.as_ref().unwrap())),
             TypeSection::Indent(t.fields.as_ref().unwrap().iter()
                 .flat_map(|field| {
@@ -59,6 +65,7 @@ impl Rust {
         assert_eq!(t.kind, TypeKind::Interface);
 
         vec![
+            TypeSection::Line(String::from("#[derive(Serialize, Deserialize)]")),
             TypeSection::Line(format!("pub enum {} {{", t.name.as_ref().unwrap())),
             TypeSection::Indent(t.possible_types.as_ref().unwrap().iter()
                 .map(|t| {
@@ -74,6 +81,7 @@ impl Rust {
         assert_eq!(t.kind, TypeKind::Enum);
 
         vec![
+            TypeSection::Line(String::from("#[derive(Serialize, Deserialize)]")),
             TypeSection::Line(format!("pub enum {} {{", t.name.as_ref().unwrap())),
             TypeSection::Indent(t.enum_values.as_ref().unwrap().iter()
                 .map(|ev| {
@@ -92,6 +100,7 @@ impl Rust {
             "Int" | "Float" | "String" | "Boolean" | "ID" => vec![],
             _ => {
                 vec![
+                    TypeSection::Line(String::from("#[derive(Serialize, Deserialize)]")),
                     TypeSection::Line(format!("pub struct {}(String);", t.name.as_ref().unwrap())),
                 ]
             }
@@ -102,6 +111,7 @@ impl Rust {
         assert_eq!(t.kind, TypeKind::InputObject);
 
         vec![
+            TypeSection::Line(String::from("#[derive(Serialize, Deserialize)]")),
             TypeSection::Line(format!("pub struct {} {{", t.name.as_ref().unwrap())),
             TypeSection::Indent(t.input_fields.as_ref().unwrap().iter()
                 .map(|field| {
